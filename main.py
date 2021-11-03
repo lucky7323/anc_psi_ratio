@@ -43,7 +43,7 @@ def main():
     base_url = f"https://fcd.terra.dev/v1/txs?account={nexus_addr}&limit=100&offset="
     offset = 0
     is_stop = False
-    data_size = 10000
+    data_size = 5000
     data = collections.defaultdict(list)
     pbar = tqdm(total=data_size)
 
@@ -55,7 +55,7 @@ def main():
 
         logger.info(f"offset: {offset}")
         response = requests.get(f"{base_url}{offset}", headers=headers)
-        time.sleep(0.2)
+        time.sleep(0.3)
         if not response or response.status_code != 200:
             break
         response = response.json()
@@ -65,18 +65,22 @@ def main():
             is_stop = True
 
         for tx in response['txs']:
-            if ts_thres > datetime.strptime(tx['timestamp'], '%Y-%m-%dT%H:%M:%SZ'):
-                is_stop = True
-                break
-            value = tx['tx']['value']['msg'][0]['value']
-            addr = value['sender']
-            airdrop_amount = float(value['execute_msg']['claim']['amount']) / 1000000
-            anc_staking_amount = get_gov_staking_amount(addr)
-            if anc_staking_amount < 100:
+            try:
+                if ts_thres > datetime.strptime(tx['timestamp'], '%Y-%m-%dT%H:%M:%SZ'):
+                    is_stop = True
+                    break
+                value = tx['tx']['value']['msg'][0]['value']
+                addr = value['sender']
+                airdrop_amount = float(value['execute_msg']['claim']['amount']) / 1000000
+                anc_staking_amount = get_gov_staking_amount(addr)
+                if anc_staking_amount < 100:
+                    continue
+                data['anc'].append(anc_staking_amount)
+                data['psi'].append(airdrop_amount)
+                pbar.update(1)
+            except Exception as e:
+                logger.error(e)
                 continue
-            data['anc'].append(anc_staking_amount)
-            data['psi'].append(airdrop_amount)
-            pbar.update(1)
         if is_stop:
             break
 
