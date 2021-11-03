@@ -5,7 +5,6 @@ from loguru import logger
 import collections
 import requests
 import time
-import json
 import pandas as pd
 from fake_useragent import UserAgent
 
@@ -44,7 +43,7 @@ def main():
     base_url = f"https://fcd.terra.dev/v1/txs?account={nexus_addr}&limit=100&offset="
     offset = 0
     is_stop = False
-    data_size = 5000
+    data_size = 10000
     data = collections.defaultdict(list)
     pbar = tqdm(total=data_size)
 
@@ -73,7 +72,7 @@ def main():
             addr = value['sender']
             airdrop_amount = float(value['execute_msg']['claim']['amount']) / 1000000
             anc_staking_amount = get_gov_staking_amount(addr)
-            if anc_staking_amount < 2:
+            if anc_staking_amount < 100:
                 continue
             data['anc'].append(anc_staking_amount)
             data['psi'].append(airdrop_amount)
