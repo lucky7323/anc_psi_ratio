@@ -13,6 +13,8 @@ filtered_entries = (abs_z_scores < 3).all(axis=1)
 df = df[filtered_entries]
 plt.figure(figsize=(12, 8))
 plt.scatter(df['anc'], df['psi'])
+plt.xlabel("ANC")
+plt.ylabel("PSI")
 plt.savefig("result.png")
 plt.show()
 
